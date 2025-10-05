@@ -1,0 +1,1411 @@
+
+			    Notes and Observations
+				       -
+				      on
+				       -
+			IBM PC-DOS and Microsoft MS-DOS
+				       -
+			     Releases 2.0 and 2.1
+				       -
+				  April, 1984
+
+
+This  document  is  a  collection  of  data  from various sources, including
+bulletin boards, magazines, seminar handouts, and independent research.
+
+WARNING:  This  information  is provided without warranty of any kind.  Each
+individual must determine the applicability and accuracy ofthis  information
+to their specific environment.
+
+If you have corrections, additions, or comments, please send them to:
+
+				 John Chapman
+			      844 S. Madison St.
+			  Hinsdale, Illinois   60521
+	Or, send  EMAIL  to  userid   [70205,1217]  on	CompuServ,
+	or	   MAIL  to  userid    $AC	    on	PCSHARE
+
+BATCH PROCESSING
+
+To  modify  the  DOS 2.0 command interpreter so that the default is echo off
+when a batch file is run,
+
+   C>debug \command.com
+   -e1721 28 1f
+   -e364a 24 26 c6 06 6e 09 00 e9 19 e8
+   -w
+   Writing 4500 bytes
+   -q
+
+The DOS Environment is accessible for use in BATs.
+
+The  standard  keywords COMSPEC, PATH, PROMPT et al can all be read and set.
+New keywords can be set and checked within BATs.   The  keywords  are  saved
+across BAT executions.
+
+For  instance BATs can check which screen is active using SET conventions as
+follows:
+
+	. NOTE leading and trailing Percent signs
+	IF %SCREEN% == MONO GOTO COLOR
+	IF %SCREEN% == COLOR GOTO MONO
+	:COLOR
+	SET SCREEN=COLOR
+	. NOTE no spaces around '=' in SET
+	MODE CO80
+	EXIT
+	:MONO
+	SET SCREEN=MONO
+	MODE MONO
+	EXIT
+	. SCREEN is set and saved across BAT executions
+
+Another example using a link convention allows BATs to call BATs:
+
+*****CALL.BAT*****
+
+	IF NOT %BATLABEL% == . GOTO %BATLABEL%
+	. note BATLABEL is assumed to be set to '.' as a null value
+	ECHO DO SOME STUFF HERE
+	SET BATCALR=%0
+	. give the called BAT my name to get back
+	. then leave word where to come back to
+	SET BATLABEL=RETURN
+	. set further parms to save %1 thru %9 if necessary
+	CALLED
+	:RETURN
+	ECHO FINISH UP HERE AFTER RETURN
+
+PC/MS-DOS Tips (2.0/2.1)						2
+
+The DOS Environment is accessible for use in BATs. (Cont'd)
+
+*****CALLED.BAT*****
+
+	ECHO DO STUFF WE WERE CALLED TO DO
+	. return to caller
+	%BATCALR%
+	. separate keywords will be necessary if further calls
+	. will be made
+
+
+A note of caution (this is documented), the environment at boot time, is
+limited (I believe to only 128 bytes). If any resident modules are installed
+(i.e. PRINT, MODE, or GRAPHICS) the area cannot be expanded. You can SET
+enough variables from within AUTOEXEC.BAT to get enough space to get by.
+
+I  would  also recommend setting up a set of conventions and preinitializing
+the  parms  you'll  use  to  '.';  Null  parameters  are  removed  from  the
+environment.
+
+In summary -
+   The rules are simple
+	SET a parm without percent signs
+	refer to them by enclosing them in percent signs
+
+I  hope  this  discovery  will  generate  a  lot  of  re-thinking  some  BAT
+techniques.
+
+PC/MS-DOS Tips (2.0/2.1)						3
+		    Current MSDOS 1.xx - 2.xx Disk formats
+
+			    (T. Jennings 19 Aug 83)
+
+	Disk Type			   Type Code
+	.......................................................
+	Single Density Single Sided 8"	   (SD128)
+   **** Double Density Single Sided 8"	   (DD1024)
+   **** FIDO's 8" Double Density	   (DD1K)
+	Double Density Double Sided 8"	   (DD1024-2)
+	IBM Displaywriter System disk	   (SD256)
+	IBM Displaywriter System disk	   (DD256-2)
+	IBM PC 8 Sector Single Sided	   (IBM8)
+	IBM PC 9 Sector Single Sided	   (IBM9)
+	IBM PC 8 Sector Double Sided	   (IBM8-2)
+	IBM PC 9 Sector Double Sided	   (IBM9-2)
+	Single Density Double Sided 8"	   (SD128-2)
+
+   **** Never did get Microsoft to figure out which one these
+	is the "correct" 8 inch format. Who knows.
+	Type	  Dir  Disk	 Fats Blk  Res	Sec	  FAT
+	Code	  Size Size	      size secs size	  ID
+	.....................................................
+	SD128	   68	251K	 2     512  1	 128	  FE
+	DD1K	  192	660K	 2    1024  1	1024	  FE
+	DD1024	   96	612K	 2    1024  1	1024	  FE
+	DD1024-2  192  1232K	 2    1024  1	1024	  FF
+	SD256	   80	287K	 2     512  2	 256	  FA  Note 1
+	DD256-2   172  1001K	 2    1024  2	 256	  FB  Note 2
+	IBM8	   64	162K	 2     512  1	 512	  FE
+	IBM9	   64	180K	 2     512  1	 512	  FC
+	IBM8-2	  112	320K	 2    1024  1	 512	  FF
+	IBM9-2	  112	360K	 2    1024  1	 512	  FD
+	SD128-2    68		 2     512  4	 128	  FC
+
+	Type	  trks secs res  sec  FAT  dir	1st  2nd  1st  1st  totl num.
+	Code	       trk  secs size size size FAT  FAT  dir  data secs heads
+	......................................................................
+	SD128	  77   26    1	  128	6  17	 1    7   13   30   2002  1
+	DD1024	  77	8    1	 1024	1   3	 1    2    3	6    616  1
+	DD1024-2  77	8    1	 1024	2   6	 1    3    5   11   1232  2
+	SD256	  77   15   17	  256	4  10	 2    6   10   20   1155  1
+									Note 1
+	DD256-2   77   26   54	  256	6  20	 2    8   14   34   4004  2
+									Note 2
+	IBM8	  40	8    1	  512	1   4	 1    2    3	7    320  1
+	IBM9	  40	9    1	  512	2   4	 1    3    5	9    360  1
+	IBM8-2	  40	8    1	  512	1   7	 1    3    5   10    640  2
+	IBM9-2	  40	9    1	  512	2   7	 1    3    5   12    720  2
+	SD128-2   77	26   4	  128  12  17	 4   16   28   45   4004  2
+
+   Note 1:
+	15 sector bias in BIOS
+   Note 2:
+	52 sector bias in BIOS
+
+PC/MS-DOS Tips (2.0/2.1)						4
+		      Additional feature in DEBUG command
+
+There  is  a compare feature in DEBUG that is not in the documentation.  Two
+blocks of memory can be compared, byte by byte with the following command:
+
+	  -C AD1 AD2 AD3
+
+DEBUG  will  compare  the memory block from AD1 to AD2 with the memory block
+starting at AD3.  The results appear in a table showing both blocks side  by
+side with the addresses and the corresponding contents.
+
+		     (from IBM.PC Users Group of Winnipeg)
+
+PC/MS-DOS Tips (2.0/2.1)						5
+
+			     Program File Formats
+
+The order of the segments in memory is determined by the linker; and all the
+segments  are  contiguous,  unless  you do some really determined and tricky
+hacking.  Supposedly, the linker determines the order  of  the  segments  by
+putting  them  in  "alphabetical  order by segment name", or at least that's
+what the documentation says it's supposed to do; but I've found that it puts
+them in the order in which they're encountered in the program  source  code,
+unless  you  create  a  dummy  file (see LINK instructions) with a different
+sequence and make it first in the LINK list of OBJ  modules.   (I  generally
+put  them  in source in the sequence code, data, stack; they always come out
+in that order, regardless of segment names, unless I  use  the  dummy  file.
+Let's assume that sequence for the remainder of this discussion.)
+
+With an .EXE file, just before execution, the registers are as follows:
+
+   AX	     - ostensibly per doc, zero; seems to contain the number
+		of characters in the command tail, though
+
+   BX:CX     - 32-bit number showing load module memory size in bytes
+		(good for dynamically allocating memory)
+
+   DX	     - zero
+
+   SS:SP     - if you defined a stack segment, these are loaded
+		accordingly; if not, SS=CS, SP=0FFFFH or end of
+		memory
+
+   DS and ES - SEGMENT address of "program header" (see below)
+
+   CS:IP     - far address of label in "END" statement of program
+
+The  program  header is the standard 256-byte .COM file "header", similar to
+what you would expect to see  at  00-FFH  in  CP/M  2.x  (but  see  doc  for
+important differences!).  Therefore, DS = CS - 10H (which is 100H divided by
+10H)  if the code seg is the first (owest) in memory, because it points to a
+location 100H before the start of the code seg.
+
+PC/MS-DOS Tips (2.0/2.1)						6
+			     Program File Formats   (Cont'd)
+
+Now, if CS is, say, 9E3H when you come up, then DS and ES will contain 9D3H.
+(Remember,  though, that your code thinks it starts at 9E3:0, zero being the
+address you specified in your END directive,  and  the  instruction  pointer
+will  actually  contain  zero.)  These values have nothing at all to do with
+the place at which your data seg is located; they  point  at  that  "program
+header".   At  location  9D3:80 (DS:80) is the command tail, if you're gonna
+reference that; its length is in AX (I believe) and is also  pointed  to  by
+the  expression  DS:80  (just  like  CP/M; data starts at 81H), or to say it
+another way, in this case absolute memory location  09DB0  (09D30+80).   But
+your  code  segment  is, say, 400H long, and the linker knew that 'cause the
+assembler told it so in the seg, the instructions
+
+	   MOV	   AX,DATASEG
+	   MOV	   DS,AX
+	   MOV	   ES,AX
+
+(where  DATASEG is the name of your data segment) will have been resolved by
+the linker in this way; the first instruction of those three was interpreted
+by the assembler as an immediate move, but the "data" to be  moved  into  AX
+was marked as relocatable.  The linker leaves instructions for the loader to
+add 9E3H (or whatever address the loader decided was a good place to put the
+program)  to  the  value  of  the  "constant" DATASEG, which is equal to 40H
+(400H/10H) because it's being "loaded" into a segment register, and when you
+look at that instruction under DEBUG it would say MOV AX,0A23H.  (Obviously,
+this is the process of address  resolution.)   In  absolute  addresses,  the
+codeseg  starts  at  09E30H,  and  the dataseg 400H later at 0A230H; in 8086
+shorthand that's 9E3:0 and A23:0 respectively.  (This assumes  the  stackseg
+is   last,   say  at  A98:0;  that  would  imply  that  your  data  seg  was
+(0A98H-0A23H)*10H, or 750H, in length.)
+
+Almost all instructions accessing data use DS as "base" register, unless you
+override  that  with  a  prefix  (as in MOV AX,ES:BLKCTR).  All instructions
+accessing storage require one of the segregs as  "base"  register.   (String
+primitives  ALWAYS  work  with  DS  and/or  ES  and can't be overridden by a
+prefix; instructions using BP as an  "index"  are  relative  to  SS,  unless
+overridden  by  a  prefix;  otherwise,  it's  DS  when  not  overridden.  Be
+careful!)
+
+PC/MS-DOS Tips (2.0/2.1)						7
+
+			     Program File Formats   (Cont'd)
+
+In BAL, you give the assembler a USING statement; that tells it that offsets
+will  be  computed relative to the first operand of the USING statement, and
+tells it to use  the  second  operand  as  "base"  register  in  base+offset
+instructions.   The  code  won't work properly until you load the address of
+the first operand into the register named by the second operand.   In  8086,
+you  give  the  assembler  an ASSUME statement; for instructions using CS as
+"base" (segment) register (all of them), such  offsets  will  be  calculated
+from the point named as xyz in the statement "ASSUME CS:xyz, DS:abc,ES:def";
+for  instructions  which  use  DS  (such as MOV AX,BLKCTR), the value of the
+offset of BLKCTR is computed relative to  label  abc;  for  ES  instructions
+(when  you use a segment override prefix, as in MOV AX,ES:BLKCTR), offset is
+computed relative to "def".  Then, if you hav that (for  example)  DS:offset
+points to the absolute location of BLKCTR, you'll be moving something random
+into  your  AX  register.  With .COM files, CS=DS=ES at startup; note that a
+typical    .COM    file    ASSUME    statement     looks     like     ASSUME
+CS:CODESEG,DS:CODESEG,ES:CODESEG,SS:CODESEG (whoops, one more)
+
+But as you can see from the preceding stuff, with .EXE files DS and ES start
+out  with  values  which  don't  point  at your data at all.  You have to do
+something like MOV AX,abc!MOV DS,AX!MOV ES,AX to put  coherent  values  into
+the  segregs,  just  as you have to do something like BALR 4,0!BCTR 4,0!BCTR
+4,0 to put a coherent value into the base reg in BAL.  That is, with an .EXE
+file, you tell the assembler to  use  DATASEG  as  the  reference  point  to
+compute  an  offset from (with the ASSUME statement); and then you must make
+sure you load DS with a value that will, in combination  with  the  computed
+offset, point at the right data.
+
+One  more  example,  then I'll stop.  Let's take a BAL program and specify a
+code "segment" 4096 bytes long, a data "segment"  4096  bytes  long,  and  a
+"stack  segment" after that.  In order to be able to access all of that data
+in that way, you'd need three base registers; let's use 3, 4  and  5.   With
+BAL, you have to figure the addresses yourself, so we get something like:
+
+   PGM	   START   0 BEGIN   STM     14,12,12(13)
+	   BALR    3,0
+   DTSEG   EQU	   START+4096
+   STSEG   EQU	   START+8192
+	   USING   *,3
+	   USING   DTSEG,4
+	   USING   STSEG,5
+   START   ST	   13,SAVEAREA+4
+	   LA	   13,SAVEAREA
+	   LA	   4,4096(3)
+	   LA	   5,8192(3)
+That is, if I remember my BAL. You get the idea.
+
+PC/MS-DOS Tips (2.0/2.1)						8
+
+		       The CTTY Command and Basic Feature
+
+			       (from Tom Jennings)
+
+The  DOS  manual explains that the command is simply CTTY device-name.  This
+will transfer control from the keyboard  and  screen  to  that  device.   It
+suggests  that  LPT1:  is  not  a  ood  idea  since the printer communicates
+(mostly) one way.  What this really leaves is COM1:, COM2: and AUX:  I  very
+cleverly tried typing CTTY COM1: It does do something, it kills the keyboard
+and  a  cold BOOT is necessary to restart.  Well, that wasn't it.  Something
+must occur prior to the CTTY command.  Being  strickly  a  seat-of-the-pants
+type,  I  set  the  HAYES to ANSWER and called in.  Nice, I had a connection
+(CARRIER/carrier).  I rushed over to the PC keyboard and  typed  CTTY  COM1:
+and  the screen went dead.  So, what else is new....But, on my other SYSTEM,
+(other end of the office), the prompt A> appeared.  I sat and typed  on  the
+terminal just as though I was sitting in front of the IBM.
+
+Well, what do you know?
+
+1) Commands are limited to what the terminal keyboard can reproduce i.e.  ^C
+for CTRL-BREAK but not CTRL-ALT-DEL (as if you would want that one anyway).
+
+2) Going to BASIC cuts you off.  SYSTEM control returns to the keyboard.
+
+3)  Most  commands work except COPY as it relates to CON: or COM1: COPY from
+disk to disk worked O.K.
+
+4)  This  means  is  total  control  from  outside  while  in  DOS only on a
+line-by-line basis.  Anything which relies on screen mapping will not  work.
+(Run  Norton's  DISKMAP  from  the  terminal  and  the map appears on the PC
+screen.)
+
+You  may  be  wondering  why  all  this verbage.  Well....  the result of my
+efforts is a BASIC program called RING.BAS which will set up  the  HAYES  to
+patiently  look  for an incoming ring, and very politely turn SYSTEM control
+over to the caller.  Oh, I forgot to  mention  the  BASIC  program  must  be
+called  from  a  BATCH file called OUTSIDER.BAT.  When RING goes back to the
+SYSTEM, the next command is CTTY COM1: Slick, huh?  RING will even write the
+BATCH file for you.  Just take a look  at  the  internal  documentation  for
+additional information.
+
+Note:  Tom Jenning's 'FIDO' board is at (415) 864-1418
+
+PC/MS-DOS Tips (2.0/2.1)						9
+
+	       DOS 2.0 HAS PROBLEMS WITH REDIRECTION OF I/O
+
+There  are  problems  in  DOS 2.0 with the redirection of I/O and piping for
+programs that use the original DOS 1.1 INT  21  function  calls  for  input.
+This  problem  is  readily  apparent to users of C language packages such as
+Computer Innovation C-86, Lattice C, or Microsoft C (you'd think they  would
+get it right!).  One problem is that all output to the screen is redirected,
+even keyboard echo.  Correct operation would redirect all program output for
+the  screen  (stdout) to the specified >file, but the echo of keyboard input
+would still be sent to the screen.  Instead, both the keyboard echo and  the
+program  output are sent to the redirected >file.  Thus, if you run programs
+such as the CAT.C (K&R,page 154) example  that  Microsoft  distributes  with
+their C; or COPYIO.C (K&R,page 15) with the output redirected to a file, you
+will get the following results:
+
+1.   Under  DOS  1.1, keyboard input is echoed to the screen as you type and
+each line appears in the >file once as expected.
+
+2.  Under DOS 2.0, keyboard input is not echoed to the screen, but each line
+appears in the >file twice!
+
+This  situation  is  handled correctly in DOS 2.0 if the new INT 21 function
+call 3F is used.  This can be demonstrated by redirecting output for the DOS
+2.0 function MORE - it works as desired.
+
+The redirecting of input to these programs doesn't work properly either.  If
+the file has not been edited with debug to end with a control-Z, the program
+will  hang  up at the end of the <input file.  You must reboot the system to
+continue!  Also, if you pipe the output of the first program into  a  second
+program,  the final output will contain each line four times, doubled spaced
+after the second lie!  These problems do not occur for programs that use the
+new DOS 2.0 calls for I/O, such as SORT and MORE.
+
+	The question now is how do you fixup C programs to run under DOS 2.0
+and  not  redirect  keyboard echo to the stdout file?  The easiest way for C
+compilers that include  their  own  redirection  code  is  to  change  their
+redirection symbols from <, >, and >> to something else.  Then DOS 2.0 won't
+do the redirection, so the C code will be able to do it correctly.  With the
+Microsoft  C  compiler, this is easily accomplished by modifying three lines
+of code in MAIN.C.  A good choice is to modify MAIN.C so that  it  redirects
+on  the  symbols {, , and .  The only restriction is that these symbols then
+should not be used in filenames.  With these changes, the user can choose to
+let either DOS <, >, >> or C {, .  do the redirecting.  The modified version
+of MAIN.C is compiled to obtain a new MAIN.OBJ, which can either be put into
+the library MC.LIB to  replace  the  original  MAIN  by  using  the  LIB.EXE
+utility,  i.e.   LIB  MC.LIB  MAINMAIN  or it can be kept separate.  If kept
+separate, remember to include it in the list of .OBJ files specified in  the
+LINK call, i.e.  LINK cmain myprogram.
+
+	The three lines to change in Microsoft C's MAIN are:
+	     case '{':
+	     case ' ':
+	     if (*line == ' ')
+
+PC/MS-DOS Tips (2.0/2.1)						10
+
+
+	The  following  is  a summary of some undocumented DOS 2.0 functions
+which can be invoked through interrupt 21H.  The information provided herein
+have inaccuracies, so use it at our own risk!  It is correct to the best  of
+my knowledge.  See the section in your DOS 2.0 manual entitled "Invoking DOS
+Functions"  for further information.  The function number provided below for
+each operation is to be placed in the AH register as described  in  the  DOS
+manual.  All numbers shown are in hex.
+
+   FUNCTION		   DESCRIPTION
+
+      37	   This interrupt is used to change incompatible
+		   configuration parameters to allow for switch
+		   indicators and whether hardware devices are
+		   available at every level of the tree directory.
+
+		   Usage:  MOV	   AH, 37
+			   MOV	   AL, func		   ; function code
+			   MOV	   DL, data
+			   INT	   21H
+		   ; read function data is returned in DL
+
+		   Function code for AL:
+		   0 - Return the DOS switch character in DL.
+		       Many systems might return "-".
+		   1 - Make the character in DL the switch character.
+		   2 - Read the device availability byte into DL. A
+		       0 means devices that devices must be accessed
+		       in file I/O calls by /DEV/device. A non-zero
+		       value means that devices are accessible at
+		       every level of the directory tree (e.g., PRN
+		       is the printer and not a file PRN).
+		   3 - Set the device availability byte to the
+		       contents of DL.
+
+		   Possible errors returned in AL:
+		   FF - Illegal function code specified in AL.
+
+      1F (?)	   Retrieve the pointer to the default drive parameter block.
+
+		   Usage:  MOV	   AH, 1F
+			   INT	   21H
+		   ; address of drive parameter block is returned in DS:BX
+
+PC/MS-DOS Tips (2.0/2.1)						11
+      32 (?)	   Retrieve the pointer to the drive parameter block
+		   for the drive number in DL, where 0 = default drive,
+		   1 = drive A:, 2 = drive B:, etc.).
+
+		   Usage:  MOV	   AH, 32h
+			   MOV	   DL, drivenum
+			   INT	   21H
+		   ; address of drive parameter block is returned in DS:BX
+		   ; AL contains FF if the drive # in DL is invalid.
+
+      F8 (?)	   Set OEM handler for INT 21H calls from F9 through FF
+		   to DS:DX. To reset these calls, pass DS and DX with FFFF.
+		   DOS is set up to allow ONE handler for all 7 of these
+		   calls. Any call to these handlers will result in the
+		   carry bit being set and AX will contain 1 if they are
+		   not initialized. The handling routine is passed all
+		   registers just as the user set them. The OEM handler
+		   routine should be exited through an IRET.
+
+		   Usage:  LDS	   DX, handleaddr
+			   MOV	   AH, F8h
+			   INT	   21H
+      4B	   Load and possibly execute a program (EXEC). This call
+		   is PARTIALLY documented in the IBM DOS 2.0 manual, but
+		   several function call values (for register AL) are
+		   omitted. They are:
+
+			   1 - Create the program segment prefix and
+			       load the program, but do not begin
+			       execution. The CS:IP and SS:SP of the
+			       program are placed in the area provided
+			       by the user.
+
+				   +-------------------------------+
+				   | Word segment addr of environ. |
+				   +-------------------------------+
+				   | Dword ptr to cmd line at 80h  |
+				   +-------------------------------+
+				   | Dword ptr to default FCB to   |
+				   | be passed at 5Ch.		   |
+				   +-------------------------------+
+				   | Dword ptr to default FCD to   |
+				   | be passed at 6Ch.		   |
+				   +-------------------------------+
+				   | Dword value of SS:SP returned |
+				   +-------------------------------+
+				   | Dword value of CS:IP returned |
+				   +-------------------------------+
+
+			   2 - This function still remains a mystery.
+   PC/MS-DOS Tips (2.0/2.1)						12
+
+      4E	   Find first matching file (FIND FIRST). This function
+		   is PARTIALLY documented in the IBM DOS 2.0 manual.
+		   The description of what is returned in the DTA where
+		   the first 21 bytes are "reserved for DOS use on
+		   subsequent find next calls" contain the following
+		   in this order:
+
+			   1 byte  - attribute byte of search
+			   1 byte  - drive used in search
+			   11 bytes- The search name used
+			   2 bytes - Word value of last entry
+			   4 bytes - Dword pointer to this DTA
+			   2 bytes - Word directory start
+			   -----------------------------------
+			   { The documented bytes follow here
+			     such as attribute found, file's
+			     time, date, size, and name found.
+
+
+      50	   Define the current DTA (?) - this is all I know...
+      51	   Retrieve current DTA (?)
+      52	   Retrieve "IVARS" (?)
+      53	   Define something about a DTA (?)
+      55	   Duplicate a DTA (?)
+
+       The  DOS  critical  section  flag  may be interrogated from within an
+interrupt handler before requesting DOS services:
+
+	     MOV AH,34h
+	     INT 21h
+
+       returns in ES:BX the address of a byte indicating (when set) that DOS
+is in an uninterruptible state, and no DOS calls should be made.
+
+PC/MS-DOS Tips (2.0/2.1)						13
+
+   To access DOS' PRINT capabilities:
+	     MOV AH,func
+	     INT 2Fh
+     Where:
+
+	     AH = 0    adds the file specified by DS:DX to the
+		       print queue.  DS:DX must point to valid
+		       opened FCB.
+
+	     AH = 1    cancels the file indicated by DS:DX.
+		       DS:DX must point to an FCB, opened or
+		       unopened.  The drive byte must not be 0.
+		       Wildcards are restricted: ? is okay, *
+		       isn't.
+
+	     AH > 1    do nothing.
+	Return with registers set as follows:
+		       DS,SI,DI,CX preserved, all others destroyed.
+		       AH = number of files currently in queue.
+		       AL = for AH=0, return 1 if queue was
+			    full.  For all other cases, return 0.
+		       ES:BX = pointer to list of 10 FCBs in
+			    queue, 38 bytes/FCB.  If the first
+			    byte of an FCB is -1, that FCB is
+			    unused.
+
+		       ES:DX = pointer to currently printing
+			    FCB.  If the queue is empty, DX = -1.
+
+PC/MS-DOS Tips (2.0/2.1)						14
+    An Operating System Dialog - PC/MS-DOS
+
+	   This  is  a list of PCDOS and MSDOS peculiarities, etc.  You will
+have to guess from the text what the  particular  questions  were,  but  you
+systems programmers will find it worth your while to rummage through it all.
+
+   There  is a problem of compatibility between MS-DOS and IBM PC-DOS having
+to do with FCB Open and Create which has finally been tracked.  The IBM 1.0,
+1.1, and 2.0  documentation  of  OPEN  (call  0FH)  contains  the  following
+statement.
+
+	   "The current block field (FCB bytes C-D) is
+	    set to zero [when an FB is opened]."
+
+   This statement is NOT true of MS-DOS 1.25 or MS-DOS 2.00.  The difference
+is  intentional,  and  the  reason  is CP/M 1.4 compatibility.  Zeroing that
+field is not CP/M compatible.  Some CP/M programs will not run when  machine
+translated  if  that  field  is zero ed.  The reason it is zeroed in the IBM
+versions is that IBM specifically requested that it be zeroed.  This is  the
+reason  for  the  complaints  from  some  vendors  about  the  fact that IBM
+MultiPlan will not run under MS-DOS.  It is probably the  reason  that  some
+other IBM programs don't run under MS-DOS.
+
+   PROGRAMMERS NOTE:
+
+	   Do  what  all MS/PC-DOS Systems programs do: Set every single FCB
+field you  want  to  use  regardless  of  what  the  documentation  says  is
+initialized.
+
+       a)  It  seems  there  is  a maximum of 19 handles, no matter what the
+files parameter is set to.  Is this really the case?  What does one gain  by
+setting files to less than 19?  Is memory for handles allocated dynamically?
+
+	   There  is  a maximum of 20 handles per process no matter what the
+files parameter is set to.  There has to be a table in your  process  header
+for  your  handles, there is a limited amount of space down there.  40 bytes
+or so are taken up by each system FCB, setting files to less than 20 saves a
+little bit of memory.  Memory for handles is not allocated  dynamically,  in
+general  an  attempt to do so would fail anyway.  Recall that .COM files and
+most .EXE files are given the biggest piece of memory possible  w  hen  they
+are  EXECed  because  the  DOS cannot make assumptions about how much memory
+these programs really use.  This means they typically get ALL  of  the  free
+memory,  that  means  there  is no free memory to allocate dynamically.  You
+will find that almost a  ll  operating  systems  (CP/M  is  about  the  only
+exception)  have a limit on the number of open files.  MS-DOS has a limit of
+20.  CP/M has no such limits because it requires the user to  keep  FCBs  in
+his own address space, managing FCBs is a pain.  You get si mplicity and you
+give  up  very  little.  What program needs more than 20 open files?  If you
+can think of one, it is  probably  a  poorly  written  program  in  that  it
+probably  only  needs a few open files at a time and doesn't bother to close
+files after it's d one with them.
+
+PC/MS-DOS Tips (2.0/2.1)						15
+
+       b)  Execing  a program eats 5 (I think) handles per try.  Is this the
+passing of parent's environment that is  mentioned  (very  briefly)  in  the
+documentatio  n?   What  are these handles?  They don't seem to be allocated
+with system  calls,  either.   Is  that  true?   std-in,  std-out,  std-err,
+std-aux,  std-prn.   I suppose you would like your program to be able to use
+the 1-12 system calls?  That means there have to be 5, the first  three  are
+standard UNIX style fair and are required for the software tools approach to
+programming.   Std-aux and Std-prn are required for system calls 3,4, and 5.
+Just because you are handed these default handles  doesn't  mean  you  can't
+close them.
+
+       "...  1) what exactly is meant by the dos being in an unstable state.
+(This  is  what  the  documentation  says  happens  if one returns to a user
+program directly from an int 24 handler.)..."
+
+   It  means  that  the DOS has the notion of an error being in effect.  All
+printer echoing is turned off, and some other  stuff  doesn't  work.   Also,
+there  are dirty buffers that are not correctly flushed out.  Thus the disks
+may not be consistent.
+
+       "...   2)  my  experimentation  shows that an abort from a hard error
+handler causes an int 22 without the value for int 22 being  sucked  out  of
+the  program  header.   every  other  way out of a program uses he terminate
+address in the header.  is this  difference  intentional?   Why?   DOes  one
+expect  the  value  at  int  22 to be different from the value in the header
+ever?..."
+
+   False.   No  INT 22h is ever issued.  The header is only used to save the
+previous process' vectors.  The address contained in INT 22 is  saved  in  a
+temp spot, the contents of INTs 22-24 are restored from the header, and then
+an  indirect  jump  is  taken  th rough the temp location.  Certain programs
+(such as COMMAND) may want to intercept  themselves  from  terminawill  then
+attempt  to  write  it out, causing a write-protect error.  If you catch the
+INT 24 and do not return, the dirty b uffer still exists.  To clear out  the
+dirty  buffer,  you MUST return from the INT 24 saying to abort the process.
+You can then catch the terminate and restore your stack (you will be running
+on your parent's stack).
+
+       "...   1)  Why does PCDOS exec function 3 (overlay) demand that there
+be some free memory that it can allocate...."
+
+   It doesn't.  IBM specifically requested that the Exec code be overlayable
+in  the  MSDOS.  As a result, it lives in the transient piece of COMMAND.COM
+and gets loaded when needed: thus the requidement for enough free  space  to
+laod the Exec loader (about 1.5K).
+
+   Under  other  MSDOS's  there  is  no such problem as the Exec system call
+lives in system space.  A general rule of thumb is: if you are not going  to
+use  some  space, free it.  You can do this either via SetBlock system call,
+or by twiddling the EXE file he ader.  You should avoid .COM format files.
+
+PC/MS-DOS Tips (2.0/2.1)						16
+
+       "...  what happens if I try to overlay an .EXE file with the high/low
+switch set to load the thing for high memory..."
+
+   Nothing.   The  HIGH/LOW  switch  is  only  for process creation, not for
+overlays.
+
+       "...  Are all these answeres the same for MSDOS?..."  [Yes.]
+
+       "...  zeroing of the current record field ..."
+
+   That  incompatability  existed  between  1.1  PC-DOS and 1.25 MSDOS.  2.0
+versions of both function identically (like 1.1 PC-DOS).
+
+   The Shell command on PC-DOS 2.0 works just fine.
+
+	   CONFIG.SYS
+		   shell = b:\command.com b:\ /P
+
+   Putting  a disk with command.com in drive B: when the system boots causes
+COMMAND to be read from drive B: and  the  COMSPEC  in  the  environment  is
+"B:\COMMAND.COM".   If  you  are  having  trouble it's because you are doing
+something wrong.  Recall that your g iven COMSPEC is checked, if you give it
+a bad one it will try to go back to the default which is the root  directory
+on  the default drive.  Recall also that this is an undocumented 2.0 feature
+so even if it doesn't work nobody is going  to  be  all  that  ho  t  to  do
+something about it.
+
+    My  error  on  the shell stuff, IBM hid it real well.  The "b:\" is also
+documented on page 10-9 (the [d:][path] part).  They did an equally poor job
+here.
+
+   The  /P  and  the  path spec have absolutely nothing to do with the SHELL
+command, they are arguments to  command.   Expecting  SHELL  to  know  stuff
+particular  to  command  is not reasonable because you are not restricted to
+running command as your top level she ll.  You can run  DEBUG  as  your  top
+level shell by saying
+
+	   SHELL = debug.com
+
+   But  watch  out!!  debug is not designed to run as a top level shell.  if
+you ever say "q" to this debug the system will crash.  Command on the  other
+hand is smart enough to run as a top level shell.  If you give the /P switch
+to  it  Command  does  some specia l things to insure that typing EXIT to it
+will not cause the system to crash as with debug.  There  is  absolutely  no
+way  for  command to assume the /P switch because he must run as a top level
+shell, and as a utility.  The smart  user  has  to  tell  him  what  to  do.
+Similarly the "b:\" tells command where to look for himself.  For instance:
+
+	   SHELL = A:\BIN\COMMAND.COM D:\COMMAND\BIN /P
+
+   The   "A:\BIN\COMMAND.COM"  tells  SYSINIT  where  to  load  the  initial
+command.com, the "D:\COMMAND\BIN" tells command where to  look  for  himself
+when  he  needs  to  locate  his  transient.   As  you  can see they are not
+restricted to being the same things.  I suggest you foreward any  complaints
+about the manual to [no address given]
+
+PC/MS-DOS Tips (2.0/2.1)						17
+
+    The volume ID attribute is very special, and is treated differently from
+all  the  other  attributes.   It is very "sticky", in order to find one you
+must look for it and it alone.  And when you do look for it, you  find  only
+it and nothing else.
+
+   The  volume  ID is constrained to be in the ROOT directory, and there can
+be only one file in the ROOT with the attribute.  The FCB flavor calls  have
+special code to enforce these rules.
+
+   The  new  calls were supposed to enforce the same rules, but they are not
+working correctly, and unexpected results are possible.  You should use  the
+old FCB calls to diddle with volume ID for the moment.
+
+   Thanks for the info.  The causes of your problems are:
+
+   (a)  ^Z  on  output to a device in cooked mode will terminate the output.
+This is for CPM-compatability: you don't want stuff after the ^Z  output  to
+your printer for example.
+
+       As  a  result COMMAND.COM issues a write to stdout and then checks to
+see if the number written is equal to the number requested.  If they are not
+the same, then a redirection error is  assumed.   ECHO  ^Z  is  supposed  to
+output  a  single cha racter.  It outputs NO characters and thus the strange
+message.
+
+       Programs  that  use old function calls, get redirected, and then read
+more than is expected will behave bizarrely: how do you indicate  EOF  on  a
+read-byte-from- console system call?  I believe that it returns ^Z.  Most of
+these programs we re never expecting to get redirected and thus, the failure
+to handle the boundary conditions properly.
+
+   (b)  The  main  crock  about  CP/M  is  that the extention on a file name
+determined the  type  of  the  file.   This  is  bogus:  a  file  should  be
+distinguished by its contents, not by its name.  When you are loading a file
+with  the name *.EXE, it d oes NOT assume that it is an EXE format file.  It
+looks at the first two bytes for a signature telling it that it  is  an  EXE
+file.  If it has the proper signature, then the loa proceeds.  otherwise, it
+presumes the file to be a COM- form at file.
+
+       If  the  file has the EXE signature, then the internal consistency IS
+checked.
+
+       Pre-2.0  versions  of  MSDOS did not check the signature byte for EXE
+files.
+
+PC/MS-DOS Tips (2.0/2.1)						18
+   ;This routine implements the UN*X system call (in spite of the fact that I
+   ;called it exec, the name in the DOS manual) under Lattice C although it
+   ;should be easy to adopt it to other languages.  One caution, it uses the
+   ;undocumented 037h DOS call to retrieve the switch character. This is
+   ; marked in the code and I will change it after DOS 2.0 so I'd rather
+   ;the DOS purists don't jump down my throat about this. If you don't like it
+   ;the way it is, change it.
+   ;
+   ;
+   ;							Darrell Plank
+   ;							BTL-IH
+		PAGE 55,132
+   ;
+   ; This function is modified from the macro by Brad Davis (b-davis@utah-cs)
+   ; The prolog and epilog are modified from Jim Holtman's macros for Pascal.
+   ;
+   ; exec( cmd)
+   ; char *md;
+   ;
+   ; This function accepts a string with the pathname of a command to be
+   ; executed and executes it.	The returned value is one of the following:
+   ;	    0:	   Successful
+   ;	   -1:	   Insufficient Memory
+   ;	   -2:	   Access Denied
+   ;	   -3:	   No such command
+   ;	   -4:	   Invalid command format
+   ;
+
+   PROLOG  MACRO
+	   PUSH    BP
+	   MOV	   BP,SP
+	   ENDM
+
+   EPILOG  MACRO   NUM
+	   POP	   BP
+	   RET
+	   ENDM
+
+PC/MS-DOS Tips (2.0/2.1)						19
+
+   EXECVAL EQU	   0
+   OVLVAL  EQU	   3
+   FNCINT  EQU	   21H
+   SETBLK  EQU	   4AH
+   EXECF   EQU	   4BH
+   CR	   EQU	   0DH
+
+   PSP	   STRUC
+   INTVECT DW	   ?
+   TOM	   DW	   ?
+   RES1    DB	   ?
+   DOSLONG DB	   5 DUP (?)
+   TERMINA DD	   ?
+   CTRLBRK DD	   ?
+   CRITERR DD	   ?
+   DOS1    DB	   22 DUP (?)
+   ENVIRO  DW	   ?
+   DOS2    DB	   46 DUP (?)
+   FPA1    DB	   16 DUP (?)
+   FPA2    DB	   20 DUP (?)
+   UPA	   DB	   128 DUP (?)
+   PSP	   ENDS
+
+   EXECDEF STRUC
+   NENVIRO DW
+   COMMND  DW	   2 DUP (0)
+   FCB5CH  DW	   2 DUP (0)
+   FCB6CH  DW	   2 DUP (0)
+   EXECDEF ENDS
+
+PC/MS-DOS Tips (2.0/2.1)						20
+
+   PGROUP  GROUP PROG
+   PROG    SEGMENT BYTE PUBLIC 'prog'
+	   ASSUME CS:PGROUP
+
+   PUBLIC  EXEC
+   EXEC    PROC NEAR
+	   PROLOG
+	   PUSH    DS
+	   PUSH    ES
+   ;
+   ; free up as much memory as we can
+   ;
+	   MOV	   AX,CS
+	   PUSH    ES		   ; Save ES for later
+	   MOV	   ES,AX
+	   MOV	   BX,SS
+	   SUB	   BX,AX
+	   ADD	   BX,1000H	   ; 64K for stack segment
+	   MOV	   AH,SETBLK
+	   INT	   FNCINT
+	   JNC	   NEAR PTR LBL1
+	   MOV	   AX,-1	   ; Insufficient memory
+	   JMP	   NEAR PTR FINE
+   LBL1:   POP	   ES		   ; Get ES's original value
+   ;
+   ; Save SS and SP registers
+   ;
+	   MOV	   CS:SPSAVE,SP
+	   MOV	   CS:SSSAVE,SS
+   ;
+   ; set up the parameter block
+   ;
+	   MOV	   CS:EXECBLK.NENVIRO,0    ; Inherit envir. from parent
+	   MOV	   AX,3700H		   ; Undocumented call for SWITCHAR
+
+PC/MS-DOS Tips (2.0/2.1)						21
+
+   ; W A R N I N G:  The following function call is undocumented and is
+   ; liable to disappear or change in future versions of DOS.
+	   INT	   FNCINT
+	   MOV	   CS:COMMAND[1],DL	   ; Switchar
+	   MOV	   DX,4[BP]		   ; Address of the command
+	   MOV	   SI,DX
+	   MOV	   DI,DX
+	   CLD
+	   XOR	   AL,AL
+	   MOV	   CX,100H		   ; Longest string can be 100h
+	   REPNE SCASB			   ; Find Null termination
+	   SUB	   DX,DI
+	   NEG	   DX
+	   MOV	   CX,DX
+	   DEC	   CX
+	   ADD	   DX,2
+	   MOV	   CS:COMMAND[0],DL	   ; Save command length
+	   LEA	   DI,CS:COMMAND[4]
+	   MOV	   AX,CS
+	   MOV	   ES,AX
+	   REP MOVSB			   ; Copy command into our buffer
+	   ASSUME  DS:PGROUP
+	   MOV	   AX,CS
+	   MOV	   DS,AX		   ; DS points at code segment
+	   MOV	   BYTE PTR [DI],CR	   ; Put in Carriage Return
+	   LEA	   DX,COMMAND
+	   MOV	   EXECBLK.COMMND[0],DX
+	   MOV	   EXECBLK.COMMND[2],DS
+	   MOV	   BX,OFFSET EXECBLK
+	   XOR	   SI,SI
+	   MOV	   DS,[SI].ENVIRO	   ; Get environment address
+   ASSUME  DS:NOTHING
+	   LEA	   SI,CS:COMSPEC	   ; Point SI at env. variable name
+	   PUSH    DS			   ; Swap
+	   PUSH    ES			   ; ES
+	   POP	   DS			   ; and
+	   POP	   ES			   ; DS
+	   CALL    GETENV
+	   PUSH    DS			   ; Swap
+	   PUSH    ES			   ; them
+	   POP	   DS			   ; back
+	   POP	   ES			   ; again
+	   MOV	   AH,EXECF
+	   MOV	   AL,EXECVAL		   ; OVLVAL here for overlay
+	   INT	   FNCINT
+	   JC	   NEAR PTR LBL2
+	   MOV	   AX,0 		   ; Successful exec
+	   JMP	   NEAR PTR FINE
+   LBL2:   MOV	   SI,AX
+	   MOV	   AL,CS:ERRORS[SI]	   ; Get error code
+	   MOV	   AH,0FFH		   ; Sign extension - Assume Negative
+   FINE:   MOV	   SS,CS:SSSAVE
+	   MOV	   SP,CS:SPSAVE
+	   POP	   ES
+	   POP	   DS
+	   EPILOG  1
+
+PC/MS-DOS Tips (2.0/2.1)						22
+
+   EXECBLK EXECDEF <>
+   ;
+   ; first byte of command s length excluding the length byte and the
+   ; trailing \r.  Second byte is switchar.
+   ;
+   COMMAND DB	   2 DUP(?),"C ",254 DUP(?)
+   COMSPEC DB	   "COMSPEC",0
+   SPSAVE  DW
+   SSSAVE  DW
+   ERRORS  DB	   ?
+	   DB	   ?
+	   DB	   -3	   ; No such command
+	   DB	   ?
+	   DB	   ?
+	   DB	   -2	   ; Access denied
+	   DB	   ?
+	   DB	   ?
+	   DB	   -1	   ; Insufficient memory
+	   DB	   ?
+	   DB	   ?
+	   DB	   -4	   ; Invalid command format
+
+   EXEC    ENDP
+
+   ;
+   ; Getenv expects ES to have the environment paragraph and DS:SI to point
+   ; to an ASCIIZ string with the desired environment variable in it.
+   ; It returns the address of the proper string in ds:dx.
+   ;
+
+	   PUBLIC GETENV
+   GETENV  PROC NEAR
+
+	   PROLOG
+	   PUSH    AX
+	   PUSH    CX
+	   PUSH    SI
+	   PUSH    DI
+	   MOV	   CS:VARNAME,SI	   ; Save offset of env. name
+	   XOR	   DI,DI
+
+PC/MS-DOS Tips (2.0/2.1)						23
+
+   ;
+   ; At this point ds:si points to dummy variable environment name and
+   ; es:di points to environment.
+   ;
+	   CLD				   ;Forward string operations
+   TOP:
+	   LODSB			   ;Get a char. of env. name
+	   CMP	   AL,0 		   ;If we're at the end
+	   JNE	   NEAR PTR LBL3
+	   CMP	   BYTE PTR ES:[DI],'='    ;Check for match
+	   JNE	   NEAR PTR LBL4
+   ;
+   ; We matched
+   ;
+	   INC	   DI			   ;Move beyond '='
+	   MOV	   DX,DI
+	   POP	   DI
+	   POP	   SI
+	   POP	   CX
+	   POP	   AX
+	   EPILOG  2
+   LBL4:
+   ;
+   ; At this point we found the end of the Env. variable name but it didn't
+   ; match because the env. string was too long
+   ;
+	   MOV	   CX,-1
+	   REPNE SCASB			   ;Find the end of the env. string
+	   CMP	   BYTE PTR ES:[DI],0
+	   JNE	   LBL3
+	   MOV	   AX,-1		   ;End of evironment area
+	   POP	   DI
+	   POP	   SI
+	   POP	   CX
+	   POP	   AX
+	   EPILOG  2
+PC/MS-DOS Tips (2.0/2.1)						24
+
+   LBL3:
+   ;
+   ; Check if the next character matches
+   ;
+	   AND	   AX,11011111b 	   ;Capitalize the character in ax
+	   SCASB
+	   JE	   TOP
+   ;
+   ; If we get here we don't have a match so move on
+   ;
+	   MOV	   SI,CS:VARNAME	   ;Go back to start of env. string
+	   XOR	   AX,AX
+	   MOV	   CX,-1
+	   REPNE SCASB			   ;Go to next env. variable
+	   CMP	   BYTE PTR ES:[DI],0
+	   JNE	   TOP
+	   MOV	   AX,-1		   ;End of environment area
+	   POP	   DI
+	   POP	   SI
+	   POP	   CX
+	   POP	   AX
+	   EPILOG  2
+
+   VARNAME DW	   ?
+
+   GETENV  ENDP
+
+   PROG    ENDS
+	   END
+[This program will be kept in <INFO-IBMPC> as EXEC.ASM -ed]
+
+PC/MS-DOS Tips (2.0/2.1)						25
++----------------------------------------------------------------------------+
+| D O S   2 . 1      I N T E R R U P T	  2 1	 F U N C T I O N   C O D E S |
++----------------------------------------------------------------------------+
++----+--------------------------+-----------------------+--------------------+
+| AH |	  F U N C T I O N	| Entry / Register Use	|	 N O T E S   |
++----+--------------------------+-----------------------+--------------------+
+| 00 | Program terminate	| CS=PSP seg. addr.	| Exit vectors are   |
+|    							  restored	     |
+| 01 | Keyboard input		| N/A: returns AL	| waits for a char;  |
+|    							  echoes it 	     |
+| 02 | Display output		| puts DL		| break checked for  |
+| 03 | AUX (Asynch) input	| N/A: returns AL	| Unbuffered,
+|    							  non-interrupt      |
+| 04 | AUX (Asynch) output	| puts DL		|     "        "     |
+| 05 | Printer output		| puts DL		|		     |
+| 06 | Direct CON: I/O		| DL=FF input		| ZF set for no input|
+| 07 | Direct CON: input Noecho | N/A: returns AL	|		     |
+| 08 | Console input	 Noecho | N/A: returns AL	| Same as Fctn 1     |
+|							  except no echo     |
+| 09 | Print string		| DS:DX ==>string	| string terminator $|
+| 0A | Buffered keyboard input	| DS:DX ==>buffer	| 1st byte is length |
+| 0B | Check std. input status	| AL=FF if input	| AL=00 if no input  |
+| 0C | Clear kybd buf. + other	| AL = function no.	| fctns 1,6,7,8,A    |
++----+--------------------------+-----------------------+--------------------+
+| 0D | Disk reset		| N/A			| Flushes all buffers|
+| 0E | Select disk		| DL=drive no.		| AL=no drives	     |
+|							| on system	     |
+| 0F | Open file		| DS:DX ==> FCB 	| AL=FF for error    |
+| 10 | Close file		| DS:DX ==> FCB 	| AL=FF for error    |
+| 11 | Search for first entry	| DS:DX ==> FCB 	| AL=FF for no match |
+| 12 | Search for next entry	| DS:DX ==> FCB 	| must follow fctn 11|
+| 13 | Delete file		| DS:DX ==> FCB 	| AL=FF for error    |
+| 14 | Sequential read		| DS:DX ==> FCB 	| EOF = 01 or 03     |
+| 15 | Sequential write 	| DS:DX ==> FCB 	| AL=01 (full)	     |
+|							|    02 (bad buffer) |
+| 16 | Create file		| DS:DX ==> FCB 	| AL=FF 	     |
+|							  directory full     |
+| 17 | Rename file		| DS:DX ==> FCB 	| AL=FF for error    |
+| 18 | Used internally by DOS:	|			|		     |
+| 19 | Current disk		| N/A: returns AL	|		     |
+| 1A | Set DTA			| DS:DX ==> new DTA	|		     |
+| 1B | Get FAT (default drive)	| N/A: returns DS:BX	| FAT id byte for    |
+|							| default drive      |
+| 1C | Get FAT (select drive)	| N/A: returns DS:BX	| FAT id byte for DL |
+| 1D | Used internally by DOS:	|			|		     |
+| 1E | Used internally by DOS:	|			|		     |
+| 1F | Used internally by DOS:	|			|		     |
+| 20 | Used internally by DOS:	|			|		     |
+| 21 | Random read		| DS:DX ==> FCB 	| AL=00 good read    |
+| 22 | Random write		| DS:DX ==> FCB 	| AL=00 good write   |
+| 23 | File size		| DS:DX ==> FCB 	| AL=00 rrf=# records|
+| 24 | Set random record field	| DS:DX ==> FCB 	|		     |
++----+--------------------------+-----------------------+--------------------+
+| 25 | Set interrupt vector	| DS:DX = vector	| Int specified in AL|
+| 26 | Create new PSP		| DX = segment no.	| Use 4B instead     |
++----+--------------------------+-----------------------+--------------------+
+| 27 | Random block read	| DS:DX ==> FCB 	| CX = record count  |
+| 28 | Random block write	| DS:DX ==> FCB 	| CX = record count  |
+| 29 | Parse filename		| DS:SI ==> command	| AL = parse service |
++----+--------------------------+-----------------------+--------------------+
+| 2A | Get date 		| N/A: returns CX:DX	| CX=yr DH=mo DL=day |
+| 2B | Set date 		| CX:DX = new date	|		     |
+| 2C | Get time 		| N/A: returns CX:DX	| CH=hr CL=min DH=sec|
+| 2D | Set time 		| CX:DX = new time	|		     |
+| 2E | Set / reset VERIFY	| DL=0, AL=1/0 (on/off	| See 54	     |
++----+--------------------------+-----------------------+--------------------+
+| 2F | Get DTA			| N/A: ES:BX ==>DTA	|		     |
+     |
+| 30 | Get DOS version number	| N/A: returns AX	| AL=major AH=minor  |
+| 31 | Stay res. terminate	| AL=retcode DX=size	|		     |
+| 32 | Used internally by DOS:	|			|		     |
+| 33 | Ctrl-Break check 	| AL=00/01 (get/set)	|		     |
+|    |				| DL=00/01 (off/on)	|		     |
+| 34 | Used internally by DOS:	|			|		     |
+| 35 | Get interrupt vector	| N/A: returns ES:BX	| See 25	     |
+| 36 | Get disk free space	| DL=drive; returns BX	| DX=tot CX=bytes    |
+|							| AX=sectors	     |
+| 37 | Used internally by DOS:	| Get/set SWITCHAR	| AL=0/1 DL=char     |
+| 38 | Get natl dependent info	| DS:DX ==> memory	| country dependent  |
++----+--------------------------+-----------------------+--------------------+
+| 39 | MKDIR - Create subdir.	| DS:DX ==> ASCIIZ	| Errors 3,5	     |
+| 3A | RMDIR - Remove subdir.	| DS:DX ==> ASCIIZ	| Errors 3,5	     |
+| 3B | CHDIR - Change subdir.	| DS:DX ==> ASCIIZ	| Error  3	     |
++----+--------------------------+-----------------------+--------------------+
+| 3C | Create a file  (handle)	| DS:DX ==> ASCIIZ	| CX=attr BX handle  |
+| 3D | Open a file    (handle)	| DS:DX ==> ASCIIZ	| AL=access code     |
+| 3E | Close a file   (handle)	| BX = handle no.	| Error 6 only	     |
+| 3F | Read	      (handle)	| BX = handle no.	| CX=read length     |
+| 40 | Write	      (handle)	| BX = handle no.	| CX=write length    |
+| 41 | Unlink - Dir. delete	| DS:DX ==> ASCIIZ	| Errors 2,5ength    |
+| 42 | LSEEK - Move r/w pointer | BX = handle no.	| AX = method	     |
+|							| CX:DX = offset     |
+| 43 | CHMOD - Change file mode | DS:DX ==> ASCIIZ	| AL=function	     |
+| 44 | IOCTL - I/O control	| BX = handle no.	| AL=function value  |
+| 45 | DUP - Dup file handle	| BX = handle no.	| AX new handle      |
+| 46 | FDUP - Force dup handle	| BX = handle no.	| CX second handle   |
++----+--------------------------+-----------------------+--------------------+
+| 47 | Get current directory	| DL = drive		| DS:SI==>64byte area|
++----+--------------------------+-----------------------+--------------------+
+| 48 | Allocate memory		| BX = no. para.	| AX block start     |
+| 49 | Free memory		| ES ==> block		| Errors 7,9	     |
+| 4A | Modify allocated memory	| ES = block BX = size	| Errors 7,8,9	     |
+| 4B | EXEC - load a program	| DS:DX ==>ASCIIZ	| AL=function; 0 or 3|
++----+--------------------------+-----------------------+--------------------+
+| 4C | EXIT - Terminate 	| AL = retcode		| See FC 0	     |
+| 4D | WAIT - return code	| N/A: returns AX	|		     |
+| 4E | Find first match (ASCIIZ)| DS:DX ==> ASCIIZ	| CX = attrib	     |
+| 4F | Find next match	(ASCIIZ)| DTA ==> 4E call	| same as 4E	     |
+| 50 | Used internally by DOS:	|			|		     |
+| 51 | Used internally by DOS:	|			|		     |
+| 52 | Used internally by DOS:	|			|		     |
+| 53 | Used internally by DOS:	|			|		     |
+| 54 | Get VERIFY state 	| N/A: AL=0/1 (on/off)	| See FC 2E	     |
+| 55 | Used internally by DOS:	|			|		     |
+| 56 | Rename a file	(ASCIIZ)| DS:DX ==> ASCIIZ	| same drive only    |
+| 57 | Get/Set file date stamp	| BX = handle no.	| DX=date CX=time    |
+|    				| AL = 0/1				     |
++----+--------------------------+-----------------------+--------------------+
+| AH |	  F U N C T I O N	| Entry / Register Use	|	 N O T E S   |
++----+--------------------------+-----------------------+--------------------+
+
+[70205,1217]
+MASM.BUG       15-Apr-84 7975	      10
+
+Keywords: MASM ASSEMBLER PC-DOS BUGS
+
+    This  document describes some problems, omissionas, bugs and limitations
+in the IBM version of the Microsoft Macro Assembler.
+
+Disposition:
+
+<R D T): R
+
+
+		      The IBM / Microsoft Macro Assembler
+				       -
+				  Version 1.0
+				       -
+				Known Problems
+				       -
+				      and
+				       -
+				  Usage Hints
+				       -
+
+				 John Chapman
+
+				 [70205,1217]
+
+Introduction
+
+	This  document  describes several known limitations, bugs and quirks
+of the IBM distributed Version (1.0) of the Microsoft Assembler.  Note  that
+these descriptions are from various sources, and have been verified at least
+once.   Some  of  these  problems are intermittent, dependent upon available
+memory, program size, structure of source program, etc.
+
+   Disclaimer
+
+	Please  note that this document is provided without warrantee of any
+kind.  Each individual must make the final determination of applicability to
+a specific situation, program, or configuration.
+
+   Audience
+
+	This  document  is  intended  for the experienced assembler language
+programmer.  The reader is assumed to be familiar with the 8086  instruction
+set, the IBM Macro Assembler, and the IBM Personal Computer.
+
+   Additions and Corrections
+
+	This  document  will  be  periodically updated as new information is
+made available.  If you have corrections, or additions, please send them to:
+
+		       John A. Chapman
+		       844 S. Madison St.
+		       Hinsdale, Illinois   60521
+
+	Or: Send EMAIL to userid  [70205,1217] on Compuserv,
+	    or	  MAIL to userid   $AC	       on PCSHARE.
+
+Assembler Tips							  2
+
+Untrapped Errors
+
+	When an instruction is accepted by the assembler, it is assumed that
+the  instruction  is  not  only  syntactically  correct, but that it will be
+decoded, as specified, into a legal machine operation.   In  MASM  1.0  this
+does not always occur:
+
+Segment Registers
+
+	The  8088  does not support a compare with a segment register as the
+register operand.  Coding
+
+		       CMP  ES,0
+will generate the instruction
+		       CMP   AX,0    ....  without generating  a  diagnostic
+message, or providing any other indication.
+
+Omitted Operands
+
+	Most   instructions   with  missing  operands  will  generate  error
+messages; the instruction:
+
+		       MOV  AX,
+produces
+
+		       MOV  AX,0 ... and no message
+
+	Apparently, the above treatment occurs for all instructions that can
+use  a  register  [non-segment  register]  with immediate data as the second
+operand.  Zero is always used for the missing operand.
+
+Missing Brackets
+
+   Erroneous  code  will also be generated if square brackets are omitted in
+certain operations, even thought an error message would be expected.
+
+	     MOV  BYTE PTR ES:DI,'$'	  Is incorrect, and
+generates:
+	     MOV  BYTE PTR ES:[7],'$'	   Rather than what was intended,
+which was:
+	     MOV  BYTE PTR ES:[DI],'$'
+
+	This  appears to occur because the assembler finds DI in it's symbol
+table, equated to it's register triplet '111'b, and substitutes the 7 as  if
+the programmer had said DI equ 7.
+
+Assembler Tips							  3
+
+Data entry errors
+
+	Always  scan comments in a newly entered program to assure that each
+comment is preceded by a semi-colon [;],  rather  than  a  colon  [:].   The
+assembler  will assume that the colon denotes a label, and will subsequently
+generate the spurious message "OPEN PROCEDURES", and may generate additional
+error messages.
+
+	Review program labels in failing programs: the branch table sequence
+below provides both correct and incorrect examples.
+
+	    Correct				  Incorrect
+
+	     JMP  CS:jumlist[BX]		   JMP	CS:jumlist[BX]
+	     ...				     ...
+	     ...				     ...
+	jumlist   DW  routin1		    jumlist:  DW   routin1
+		  DW  routin2			      DW   routin2
+
+Radix Specifications
+
+	Even  if a RADIX pseudo-op has been used to specify the default base
+for data values, the assembler will still check the  last  character  for  a
+valid radix specification, and use it if present.  For example:
+
+	     SUB  BX,0B
+
+generates:
+	     83 EB 00	.. which is incorrect for X'0B";
+while:
+	     SUB  BX,11d   or	BX,0Bh	  .. are both correct;
+
+and will generate:
+
+	     83 EB 0B .... which is the intended instruction.
+
+Pseudo-Operations
+
+	The .XLIST pseudo operation will be ineffective [during both passes]
+if the command line parameter /D is specified for the assembly.
+
+	The  assembler will not correctly resolve 'identity' type definition
+errors in the EQUATE pseudo-op.
+
+	LOOP-IT   EQU  LOOP-IT	       will cause the assembler to loop.
+
+Assembler Tips							  4
+
+Out of Memory Error in small programs
+
+Occasionally  users  will  experience an MASM abort with the message "OUT OF
+MEMORY", with a large amount of installed, available  memory,  and  a  small
+program.  This problem is a recognized bug common to Pascal, MASM, and other
+Microsoft products written in Pascal.
+
+   A>ren masm.exe masm.xxx
+   A>debug masm.xxx
+   -s 0 ffff 81 fb 00 10 7e 03
+   xxxx:FB23
+   -d fb20,fb2f
+   xxxx:FB20  00
+   -e FB27
+   xxxx FB27  7E.76	<===================Enter 76 in response to
+					    first part of line
+   -w
+   WRITING 10800 BYTES
+   -q
+   A>
+
+   The patch above corrects an invalid comparison for memory size, caused by
+using JLE rather than JBE for the test.
+
+Assembler Tips							  5
+
+Reserved Words
+
+   The  IBM/Microsoft assembler documentation does not provide documentation
+on the reserved word list of the assembler.  This is especially unfortunate,
+since the assembler will fail to provide a diagnostic message if a  reserved
+word is used in place of an operand or label.
+
+Example:
+		MOV   ax,byte	 ;BYTE not defined - no error reported
+
+Pass 1 Errors omitted
+
+   Errors caused in Pass 1 that are not repeated in pass 2 are not reported.
+
+Example:
+
+		  IF1
+		       ABC     EQU  AX
+		  ENDIF
+					   -- Incorrect equate - no error.
+
+Macro Parameters
+
+   If  a  macro is invoked within another macro, with a parameter which is a
+quoted string constant, all operands following the quoted string will be set
+to blank.
+
+Example:
+	sampl1 macro  p1,p2
+	       insamp <p1>,<p2>
+	       endm
+	insamp macro  p1,p2
+	       MOV    AX,p1
+	       ADD    AX,p2
+	       endm
+
+	+      MOV    AX,"0"
+	+      ADD    AX,
