@@ -1,4 +1,4 @@
-Implement MORE utility for IMB PC-DOS 1.00 using IBM Personal Computer Pascal 1.00
+Implement MORE utility for IBM PC-DOS 1.00 using IBM Personal Computer Pascal 1.00
 
 Build steps:
 
