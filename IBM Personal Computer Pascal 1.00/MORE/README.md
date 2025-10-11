@@ -15,6 +15,6 @@ A:LINK
 < Answer "more,util" when asked for object modules
 < Answer "more" when asked for run file
 
-(Test MORE.EX)
+(Test MORE.EXE)
 MORE MORE.PAS
 ```
